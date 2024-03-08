@@ -16,7 +16,10 @@
 #ifndef MLIR_ANALYSIS_PRESBURGER_MPINT_H
 #define MLIR_ANALYSIS_PRESBURGER_MPINT_H
 
+#include "ArrayRef.h"
 #include "SlowMPInt.h"
+#include "Compiler.h"
+#include <cassert>
 #include <numeric>
 
 namespace mlir {
@@ -29,9 +32,9 @@ namespace presburger {
 /// from the mlir::presburger namespace. So to access the 64-bit overloads, an
 /// explict call to mlir::ceilDiv would be required. These using declarations
 /// allow overload resolution to transparently call the right function.
-using ::mlir::ceilDiv;
-using ::mlir::floorDiv;
-using ::mlir::mod;
+// using ::mlir::ceilDiv;
+// using ::mlir::floorDiv;
+// using ::mlir::mod;
 
 namespace detail {
 /// If builtin intrinsics for overflow-checked arithmetic are available,
@@ -40,15 +43,15 @@ namespace detail {
 /// but they are not always_inlined, which is important for us to achieve
 /// high-performance; calling the functions directly would result in a slowdown
 /// of 1.15x.
-LLVM_ATTRIBUTE_ALWAYS_INLINE bool addOverflow(int64_t x, int64_t y,
-                                              int64_t &result) {
+FP_ATTRIBUTE_ALWAYS_INLINE bool addOverflow(int64_t x, int64_t y,
+                                            int64_t &result) {
 #if __has_builtin(__builtin_add_overflow)
   return __builtin_add_overflow(x, y, &result);
 #else
   return llvm::AddOverflow(x, y, result);
 #endif
 }
-LLVM_ATTRIBUTE_ALWAYS_INLINE bool subOverflow(int64_t x, int64_t y,
+FP_ATTRIBUTE_ALWAYS_INLINE bool subOverflow(int64_t x, int64_t y,
                                               int64_t &result) {
 #if __has_builtin(__builtin_sub_overflow)
   return __builtin_sub_overflow(x, y, &result);
@@ -56,7 +59,7 @@ LLVM_ATTRIBUTE_ALWAYS_INLINE bool subOverflow(int64_t x, int64_t y,
   return llvm::SubOverflow(x, y, result);
 #endif
 }
-LLVM_ATTRIBUTE_ALWAYS_INLINE bool mulOverflow(int64_t x, int64_t y,
+FP_ATTRIBUTE_ALWAYS_INLINE bool mulOverflow(int64_t x, int64_t y,
                                               int64_t &result) {
 #if __has_builtin(__builtin_mul_overflow)
   return __builtin_mul_overflow(x, y, &result);
@@ -90,14 +93,14 @@ private:
   };
   unsigned holdsLarge;
 
-  LLVM_ATTRIBUTE_ALWAYS_INLINE void initSmall(int64_t o) {
-    if (LLVM_UNLIKELY(isLarge()))
+  FP_ATTRIBUTE_ALWAYS_INLINE void initSmall(int64_t o) {
+    if (FP_UNLIKELY(isLarge()))
       valLarge.detail::SlowMPInt::~SlowMPInt();
     valSmall = o;
     holdsLarge = false;
   }
-  LLVM_ATTRIBUTE_ALWAYS_INLINE void initLarge(const detail::SlowMPInt &o) {
-    if (LLVM_LIKELY(isSmall())) {
+  FP_ATTRIBUTE_ALWAYS_INLINE void initLarge(const detail::SlowMPInt &o) {
+    if (FP_LIKELY(isSmall())) {
       // The data in memory could be in an arbitrary state, not necessarily
       // corresponding to any valid state of valLarge; we cannot call any member
       // functions, e.g. the assignment operator on it, as they may access the
@@ -113,28 +116,28 @@ private:
     holdsLarge = true;
   }
 
-  LLVM_ATTRIBUTE_ALWAYS_INLINE explicit MPInt(const detail::SlowMPInt &val)
+  FP_ATTRIBUTE_ALWAYS_INLINE explicit MPInt(const detail::SlowMPInt &val)
       : valLarge(val), holdsLarge(true) {}
-  LLVM_ATTRIBUTE_ALWAYS_INLINE bool isSmall() const { return !holdsLarge; }
-  LLVM_ATTRIBUTE_ALWAYS_INLINE bool isLarge() const { return holdsLarge; }
+  FP_ATTRIBUTE_ALWAYS_INLINE bool isSmall() const { return !holdsLarge; }
+  FP_ATTRIBUTE_ALWAYS_INLINE bool isLarge() const { return holdsLarge; }
   /// Get the stored value. For getSmall/Large,
   /// the stored value should be small/large.
-  LLVM_ATTRIBUTE_ALWAYS_INLINE int64_t getSmall() const {
+  FP_ATTRIBUTE_ALWAYS_INLINE int64_t getSmall() const {
     assert(isSmall() &&
            "getSmall should only be called when the value stored is small!");
     return valSmall;
   }
-  LLVM_ATTRIBUTE_ALWAYS_INLINE int64_t &getSmall() {
+  FP_ATTRIBUTE_ALWAYS_INLINE int64_t &getSmall() {
     assert(isSmall() &&
            "getSmall should only be called when the value stored is small!");
     return valSmall;
   }
-  LLVM_ATTRIBUTE_ALWAYS_INLINE const detail::SlowMPInt &getLarge() const {
+  FP_ATTRIBUTE_ALWAYS_INLINE const detail::SlowMPInt &getLarge() const {
     assert(isLarge() &&
            "getLarge should only be called when the value stored is large!");
     return valLarge;
   }
-  LLVM_ATTRIBUTE_ALWAYS_INLINE detail::SlowMPInt &getLarge() {
+  FP_ATTRIBUTE_ALWAYS_INLINE detail::SlowMPInt &getLarge() {
     assert(isLarge() &&
            "getLarge should only be called when the value stored is large!");
     return valLarge;
@@ -146,31 +149,31 @@ private:
   }
 
 public:
-  LLVM_ATTRIBUTE_ALWAYS_INLINE explicit MPInt(int64_t val)
+  FP_ATTRIBUTE_ALWAYS_INLINE explicit MPInt(int64_t val)
       : valSmall(val), holdsLarge(false) {}
-  LLVM_ATTRIBUTE_ALWAYS_INLINE MPInt() : MPInt(0) {}
-  LLVM_ATTRIBUTE_ALWAYS_INLINE ~MPInt() {
-    if (LLVM_UNLIKELY(isLarge()))
+  FP_ATTRIBUTE_ALWAYS_INLINE MPInt() : MPInt(0) {}
+  FP_ATTRIBUTE_ALWAYS_INLINE ~MPInt() {
+    if (FP_UNLIKELY(isLarge()))
       valLarge.detail::SlowMPInt::~SlowMPInt();
   }
-  LLVM_ATTRIBUTE_ALWAYS_INLINE MPInt(const MPInt &o)
+  FP_ATTRIBUTE_ALWAYS_INLINE MPInt(const MPInt &o)
       : valSmall(o.valSmall), holdsLarge(false) {
-    if (LLVM_UNLIKELY(o.isLarge()))
+    if (FP_UNLIKELY(o.isLarge()))
       initLarge(o.valLarge);
   }
-  LLVM_ATTRIBUTE_ALWAYS_INLINE MPInt &operator=(const MPInt &o) {
-    if (LLVM_LIKELY(o.isSmall())) {
+  FP_ATTRIBUTE_ALWAYS_INLINE MPInt &operator=(const MPInt &o) {
+    if (FP_LIKELY(o.isSmall())) {
       initSmall(o.valSmall);
       return *this;
     }
     initLarge(o.valLarge);
     return *this;
   }
-  LLVM_ATTRIBUTE_ALWAYS_INLINE MPInt &operator=(int x) {
+  FP_ATTRIBUTE_ALWAYS_INLINE MPInt &operator=(int x) {
     initSmall(x);
     return *this;
   }
-  LLVM_ATTRIBUTE_ALWAYS_INLINE explicit operator int64_t() const {
+  FP_ATTRIBUTE_ALWAYS_INLINE explicit operator int64_t() const {
     if (isSmall())
       return getSmall();
     return static_cast<int64_t>(getLarge());
