@@ -23,7 +23,6 @@
 
 #include <gmp.h>
 
-namespace mlir {
 namespace presburger {
 namespace detail {
 
@@ -129,11 +128,10 @@ SlowMPInt operator/(int64_t a, const SlowMPInt &b);
 SlowMPInt operator%(int64_t a, const SlowMPInt &b);
 } // namespace detail
 } // namespace presburger
-} // namespace mlir
 
-template <> struct std::hash<mlir::presburger::detail::SlowMPInt> {
+template <> struct std::hash<presburger::detail::SlowMPInt> {
   std::size_t
-  operator()(const mlir::presburger::detail::SlowMPInt &s) const noexcept;
+  operator()(const presburger::detail::SlowMPInt &s) const noexcept;
 };
 
 #endif // MLIR_ANALYSIS_PRESBURGER_SLOWMPINT_H

@@ -11,8 +11,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef MLIR_ANALYSIS_PRESBURGER_MATRIX_H
-#define MLIR_ANALYSIS_PRESBURGER_MATRIX_H
+#ifndef FP_ANALYSIS_PRESBURGER_MATRIX_H
+#define FP_ANALYSIS_PRESBURGER_MATRIX_H
 
 #include "MPInt.h"
 

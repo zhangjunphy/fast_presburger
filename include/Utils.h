@@ -17,10 +17,33 @@
 #include "Matrix.h"
 #include <optional>
 
-namespace mlir {
 namespace presburger {
 
 class IntegerRelation;
+class hash_code {
+  size_t value;
+
+public:
+  /// Default construct a hash_code.
+  /// Note that this leaves the value uninitialized.
+  hash_code() = default;
+
+  /// Form a hash code directly from a numerical value.
+  hash_code(size_t value) : value(value) {}
+
+  /// Convert the hash code to its numerical value for use.
+  /*explicit*/ operator size_t() const { return value; }
+
+  friend bool operator==(const hash_code &lhs, const hash_code &rhs) {
+    return lhs.value == rhs.value;
+  }
+  friend bool operator!=(const hash_code &lhs, const hash_code &rhs) {
+    return lhs.value != rhs.value;
+  }
+
+  /// Allow a hash_code to be directly run through hash_value.
+  friend size_t hash_value(const hash_code &code) { return code.value; }
+};
 
 /// This class represents the result of operations optimizing something subject
 /// to some constraints. If the constraints were not satisfiable the, kind will
@@ -268,6 +291,5 @@ SmallVector<MPInt, 8> getNegatedCoeffs(ArrayRef<MPInt> coeffs);
 /// since all the variables are constrained to be integers.
 SmallVector<MPInt, 8> getComplementIneq(ArrayRef<MPInt> ineq);
 } // namespace presburger
-} // namespace mlir
 
 #endif // MLIR_ANALYSIS_PRESBURGER_UTILS_H

@@ -11,7 +11,6 @@
 #include <iostream>
 #include <cassert>
 
-using namespace mlir;
 using namespace presburger;
 using namespace detail;
 
@@ -28,8 +27,8 @@ SlowMPInt::SlowMPInt(const SlowMPInt &val) { mpz_set(this->val, val.val); }
 SlowMPInt &SlowMPInt::operator=(int64_t val) { return *this = SlowMPInt(val); }
 SlowMPInt::operator int64_t() const { return mpz_get_si(val); }
 
-std::size_t std::hash<mlir::presburger::detail::SlowMPInt>::operator()(
-    const mlir::presburger::detail::SlowMPInt &s) const noexcept {
+std::size_t std::hash<presburger::detail::SlowMPInt>::operator()(
+    const presburger::detail::SlowMPInt &s) const noexcept {
   mpz_srcptr ptr = static_cast<mpz_srcptr>(s.val);
   std::string_view view{reinterpret_cast<char *>(ptr->_mp_d),
                         abs(ptr->_mp_size) * sizeof(mp_limb_t)};

@@ -8,28 +8,28 @@
 
 #include "MPInt.h"
 
-using namespace mlir;
+#include <iostream>
+
 using namespace presburger;
 
-llvm::hash_code mlir::presburger::hash_value(const MPInt &x) {
+hash_code presburger::hash_value(const MPInt &x) {
   if (x.isSmall())
-    return llvm::hash_value(x.getSmall());
+    return hash_value(x.getSmall());
   return detail::hash_value(x.getLarge());
 }
 
 /// ---------------------------------------------------------------------------
 /// Printing.
 /// ---------------------------------------------------------------------------
-llvm::raw_ostream &MPInt::print(llvm::raw_ostream &os) const {
+std::ostream &MPInt::print(std::ostream &os) const {
   if (isSmall())
     return os << valSmall;
   return os << valLarge;
 }
 
-void MPInt::dump() const { print(llvm::errs()); }
+void MPInt::dump() const { print(std::cerr); }
 
-llvm::raw_ostream &mlir::presburger::operator<<(llvm::raw_ostream &os,
-                                                const MPInt &x) {
+std::ostream &presburger::operator<<(std::ostream &os, const MPInt &x) {
   x.print(os);
   return os;
 }
